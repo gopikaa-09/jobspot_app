@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
 import 'package:jobspot_app/core/constants/user_role.dart';
 import 'package:jobspot_app/core/routes/dashboard_router.dart';
@@ -14,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:jobspot_app/features/splash/presentation/screens/splash_screen.dart';
+import 'package:jobspot_app/features/splash/presentation/screens/network_error_screen.dart';
 import 'package:jobspot_app/features/dashboard/presentation/providers/seeker_home_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -22,7 +25,21 @@ final supabase = Supabase.instance.client;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Map initialization moved to MapScreen
+  // Pre-initialize Map renderer to prevent ANRs and slow loading on first map view
+  Future.microtask(() async {
+    try {
+      final GoogleMapsFlutterPlatform mapsImplementation =
+          GoogleMapsFlutterPlatform.instance;
+      if (mapsImplementation is GoogleMapsFlutterAndroid) {
+        mapsImplementation.useAndroidViewSurface = true;
+        await mapsImplementation.initializeWithRenderer(
+          AndroidMapRenderer.platformDefault,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error initializing map renderer: $e");
+    }
+  });
 
   runApp(
     MultiProvider(
@@ -90,10 +107,25 @@ class _RootPageState extends State<RootPage> {
     await dotenv.load(fileName: ".env");
 
     // Initialize Supabase
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-    );
+    try {
+      await Supabase.initialize(
+        url: dotenv.env['SUPABASE_URL']!,
+        anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+      ).timeout(const Duration(seconds: 15));
+    } catch (e) {
+      if (!e.toString().contains('already initialized')) {
+        debugPrint("Error initializing Supabase: $e");
+        _updateHome(
+          NetworkErrorScreen(
+            onRetry: () {
+              _setLoading();
+              _initAuth();
+            },
+          ),
+        );
+        return;
+      }
+    }
 
     final session = supabase.auth.currentSession;
 
@@ -180,7 +212,8 @@ class _RootPageState extends State<RootPage> {
           .from('user_profiles')
           .select('role, is_disabled, profile_completed')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(const Duration(seconds: 15));
 
       if (profile == null) {
         _updateHome(const RoleSelectionScreen());
@@ -203,7 +236,22 @@ class _RootPageState extends State<RootPage> {
           : null;
 
       _updateHome(DashboardRouter(role: role));
-    } catch (_) {
+    } catch (e) {
+      debugPrint("Error in _handleUser: $e");
+      if (e is TimeoutException ||
+          e.toString().contains('SocketException') ||
+          e.toString().contains('ClientException') ||
+          e.toString().contains('Failed host lookup')) {
+        _updateHome(
+          NetworkErrorScreen(
+            onRetry: () {
+              _setLoading();
+              _handleUser(user);
+            },
+          ),
+        );
+        return;
+      }
       _updateHome(const LoginScreen());
     }
   }

@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:jobspot_app/features/reviews/presentation/seeker_reviews_screen.dart';
 import 'package:jobspot_app/data/services/report_service.dart';
 import 'package:jobspot_app/core/utils/report_dialog.dart';
+import 'package:jobspot_app/core/utils/job_match_helper.dart';
 
 class ApplicantProfileScreen extends StatefulWidget {
   final Map<String, dynamic> application;
@@ -104,6 +105,7 @@ class _ApplicantProfileScreenState extends State<ApplicantProfileScreen> {
     final theme = Theme.of(context);
     final applicant = widget.application['applicant'] as Map<String, dynamic>;
     final job = widget.application['job_posts'] as Map<String, dynamic>;
+    final matchScore = JobMatchHelper.calculateMatchScore(applicant, job);
 
     return Scaffold(
       appBar: AppBar(
@@ -191,6 +193,41 @@ class _ApplicantProfileScreenState extends State<ApplicantProfileScreen> {
                       color: theme.hintColor,
                     ),
                   ),
+                  if (matchScore > 0) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.auto_awesome,
+                            color: Colors.green,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '$matchScore% Match',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -300,6 +337,14 @@ class _ApplicantProfileScreenState extends State<ApplicantProfileScreen> {
               ),
               contentPadding: EdgeInsets.zero,
             ),
+            if (applicant['assets'] != null &&
+                (applicant['assets'] as List).isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: const Text('Assets'),
+                subtitle: Text((applicant['assets'] as List).join(', ')),
+                contentPadding: EdgeInsets.zero,
+              ),
             const SizedBox(height: 24),
 
             // Contact Info

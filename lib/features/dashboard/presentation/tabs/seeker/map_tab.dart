@@ -7,8 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
-import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
+
 import 'package:jobspot_app/core/theme/app_theme.dart';
 import 'package:jobspot_app/core/theme/map_styles.dart';
 import 'package:jobspot_app/core/utils/map_clustering_helper.dart';
@@ -109,19 +108,6 @@ class _MapTabState extends State<MapTab> with AutomaticKeepAliveClientMixin {
   }
 
   Future<void> _initMap() async {
-    // Initialize map renderer
-    final GoogleMapsFlutterPlatform mapsImplementation =
-        GoogleMapsFlutterPlatform.instance;
-    if (mapsImplementation is GoogleMapsFlutterAndroid) {
-      mapsImplementation.useAndroidViewSurface = true;
-      try {
-        await mapsImplementation.initializeWithRenderer(
-          AndroidMapRenderer.platformDefault,
-        );
-      } catch (e) {
-        debugPrint("Error initializing map renderer: $e");
-      }
-    }
     await _loadMarkerIcons();
     _initLocation();
   }

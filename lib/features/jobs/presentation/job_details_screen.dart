@@ -11,6 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:jobspot_app/features/jobs/presentation/widgets/screening_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:jobspot_app/features/dashboard/presentation/providers/seeker_home_provider.dart';
+import 'package:jobspot_app/features/profile/presentation/providers/profile_provider.dart';
+import 'package:jobspot_app/core/utils/job_match_helper.dart';
 
 class JobDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> job;
@@ -390,6 +392,16 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
     final minPay = _currentJob['pay_amount_min'] ?? 0;
     final maxPay = _currentJob['pay_amount_max'];
     final salaryStr = maxPay != null ? '₹$minPay - ₹$maxPay' : '₹$minPay';
+    final isSeeker = widget.userRole == 'seeker';
+
+    int matchScore = 0;
+    if (isSeeker) {
+      final seekerProfile = context.read<ProfileProvider>().profileData;
+      matchScore = JobMatchHelper.calculateMatchScore(
+        seekerProfile,
+        _currentJob,
+      );
+    }
 
     return SafeArea(
       child: Padding(
@@ -471,6 +483,41 @@ class _JobDetailsScreenState extends State<JobDetailsScreen>
                 ],
               ),
             ),
+            if (isSeeker && matchScore > 0) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.green,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$matchScore% Match',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
