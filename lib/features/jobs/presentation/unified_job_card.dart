@@ -9,6 +9,8 @@ import 'package:jobspot_app/features/jobs/presentation/widgets/screening_dialog.
 import 'package:jobspot_app/features/jobs/presentation/widgets/job_card_salary_info.dart';
 import 'package:provider/provider.dart';
 import 'package:jobspot_app/features/dashboard/presentation/providers/seeker_home_provider.dart';
+import 'package:jobspot_app/features/profile/presentation/providers/profile_provider.dart';
+import 'package:jobspot_app/core/utils/job_match_helper.dart';
 
 enum JobCardRole { seeker, employer }
 
@@ -187,6 +189,16 @@ class _UnifiedJobCardState extends State<UnifiedJobCard> {
     final isEmployer = widget.role == JobCardRole.employer;
     final isActive = widget.job['is_active'] ?? true;
 
+    // Calculate match score if seeker
+    int matchScore = 0;
+    if (!isEmployer) {
+      final seekerProfile = context.read<ProfileProvider>().profileData;
+      matchScore = JobMatchHelper.calculateMatchScore(
+        seekerProfile,
+        widget.job,
+      );
+    }
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -269,6 +281,13 @@ class _UnifiedJobCardState extends State<UnifiedJobCard> {
                         widget.job['shift_end'],
                       ),
                       Icons.access_time,
+                    ),
+                  if (!isEmployer && matchScore > 0)
+                    _buildInfoChip(
+                      context,
+                      '$matchScore% Match',
+                      Icons.auto_awesome,
+                      colorOverride: Colors.green,
                     ),
                 ],
               ),
@@ -393,21 +412,31 @@ class _UnifiedJobCardState extends State<UnifiedJobCard> {
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, String label, IconData icon) {
+  Widget _buildInfoChip(
+    BuildContext context,
+    String label,
+    IconData icon, {
+    Color? colorOverride,
+  }) {
     final theme = Theme.of(context);
 
     // Determine color based on label content for a "pop" effect
     Color chipColor;
 
-    final lowerLabel = label.toLowerCase();
-    if (lowerLabel.contains('remote')) {
-      chipColor = Colors.green;
-    } else if (lowerLabel.contains('time') || lowerLabel.contains('full')) {
-      chipColor = Colors.blue;
-    } else if (lowerLabel.contains('part') || lowerLabel.contains('contract')) {
-      chipColor = Colors.orange;
+    if (colorOverride != null) {
+      chipColor = colorOverride;
     } else {
-      chipColor = Colors.purple;
+      final lowerLabel = label.toLowerCase();
+      if (lowerLabel.contains('remote')) {
+        chipColor = Colors.green;
+      } else if (lowerLabel.contains('time') || lowerLabel.contains('full')) {
+        chipColor = Colors.blue;
+      } else if (lowerLabel.contains('part') ||
+          lowerLabel.contains('contract')) {
+        chipColor = Colors.orange;
+      } else {
+        chipColor = Colors.purple;
+      }
     }
 
     // Use playful pastel shades

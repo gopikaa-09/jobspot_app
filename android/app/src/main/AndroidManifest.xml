@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.jobspot_app">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.jobspot_app"
+    tools:ignore="MissingClass,LockedOrientationActivity"
+    android:versionCode="1"
+    android:versionName="1.0">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -8,7 +12,8 @@
     <application
         android:label="jobspot_app"
         android:icon="@mipmap/ic_launcher"
-        android:enableOnBackInvokedCallback="true">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33">
 
         <uses-library
             android:name="org.apache.http.legacy"
@@ -53,6 +58,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Required for image_cropper -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
     </application>
     <queries>

@@ -54,6 +54,7 @@ class _EditSeekerProfileScreenState extends State<EditSeekerProfileScreen> {
 
   String? _selectedJobType;
   LocationAddress? _selectedAddress;
+  late List<String> _selectedAssets;
 
   final List<String> _commonSkills = [
     'Flutter',
@@ -110,6 +111,8 @@ class _EditSeekerProfileScreenState extends State<EditSeekerProfileScreen> {
     if (!_jobTypes.contains(_selectedJobType)) {
       _selectedJobType = 'Part-time';
     }
+
+    _selectedAssets = List<String>.from(profile?['assets'] ?? []);
 
     if (profile?['latitude'] != null && profile?['longitude'] != null) {
       _selectedAddress = LocationAddress(
@@ -227,6 +230,7 @@ class _EditSeekerProfileScreenState extends State<EditSeekerProfileScreen> {
         'latitude': _selectedAddress?.latitude,
         'longitude': _selectedAddress?.longitude,
         'address_line': _selectedAddress?.addressLine,
+        'assets': _selectedAssets,
       };
 
       final profileService = ProfileService();
@@ -558,6 +562,32 @@ class _EditSeekerProfileScreenState extends State<EditSeekerProfileScreen> {
                     ? null
                     : (value) => setState(() => _selectedJobType = value),
               ),
+              const SizedBox(height: 16),
+              const Text(
+                'Assets Owned',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              ...['Own Bike', 'Driving License', 'Smartphone', 'Laptop'].map((
+                asset,
+              ) {
+                return CheckboxListTile(
+                  title: Text(asset),
+                  value: _selectedAssets.contains(asset),
+                  onChanged: (checked) {
+                    setState(() {
+                      if (checked == true) {
+                        _selectedAssets.add(asset);
+                      } else {
+                        _selectedAssets.remove(asset);
+                      }
+                    });
+                  },
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                );
+              }),
 
               const SizedBox(height: 40),
               if (_isLoading)

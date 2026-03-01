@@ -144,8 +144,6 @@ class JobService {
         .single();
   }
 
-  // --- Saved Jobs Methods ---
-
   Future<List<Map<String, dynamic>>> fetchSavedJobs() async {
     final userId = _client.auth.currentUser!.id;
     final response = await _client

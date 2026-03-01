@@ -69,16 +69,12 @@ class _SearchTabState extends State<SearchTab>
         page: _page,
         pageSize: _pageSize,
         // Map filters to service params
-        location: null, // Add to UI if needed
+        location: null,
+        // Add to UI if needed
         workMode: _selectedJobType == 'Remote' ? 'remote' : null,
         // Mapping 'Job Type' (Full Time, etc) to 'type' field in DB if needed
         // For now, assuming basic text search is primary
       );
-
-      // Client-side filter for 'Job Type' if server doesn't support it yet via params
-      // Or ideally update service to support it.
-      // Current service has 'workMode' but not 'type'.
-      // For now, we will rely on text search or just basic display.
 
       final List<Map<String, dynamic>> castedJobs =
           List<Map<String, dynamic>>.from(newJobs);
@@ -382,9 +378,6 @@ class _SearchTabState extends State<SearchTab>
                 ],
               ),
             ),
-
-            // Results Area
-            // Results Area
             Expanded(
               child: _isLoading && _jobs.isEmpty
                   ? const Center(child: CircularProgressIndicator())

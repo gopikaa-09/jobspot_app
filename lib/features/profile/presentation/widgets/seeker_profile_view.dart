@@ -49,9 +49,7 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
     }
 
     try {
-      final userId = widget.userId ?? SupabaseService
-          .getCurrentUser()
-          ?.id;
+      final userId = widget.userId ?? SupabaseService.getCurrentUser()?.id;
 
       if (userId == null) {
         if (mounted) setState(() => _isLoading = false);
@@ -125,9 +123,7 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
             title: profile['full_name'] ?? 'User',
             subtitle: widget.isAdminView
                 ? 'Seeker Account'
-                : (SupabaseService
-                .getCurrentUser()
-                ?.email ?? ''),
+                : (SupabaseService.getCurrentUser()?.email ?? ''),
             onEdit: widget.isAdminView
                 ? null
                 : () => _navigateToEditProfile(context, profile),
@@ -150,9 +146,7 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme
-                        .of(context)
-                        .cardColor,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
@@ -172,7 +166,7 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
                         icon: Icons.bolt_outlined,
                         label: 'Skills',
                         value:
-                        (profile['skills'] as List?)?.join(', ') ??
+                            (profile['skills'] as List?)?.join(', ') ??
                             'Not provided',
                       ),
                       ProfileInfoTile(
@@ -185,6 +179,13 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
                         label: 'Job Preference',
                         value: profile['preferred_job_type'] ?? 'Not provided',
                       ),
+                      if (profile['assets'] != null &&
+                          (profile['assets'] as List).isNotEmpty)
+                        ProfileInfoTile(
+                          icon: Icons.inventory_2_outlined,
+                          label: 'Assets',
+                          value: (profile['assets'] as List).join(', '),
+                        ),
                     ],
                   ),
                 ),
@@ -224,12 +225,11 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              SeekerReviewsScreen(
-                                seekerId: SupabaseService.getCurrentUser()!.id,
-                                seekerName: profile['full_name'] ?? 'Me',
-                                canWriteReview: false,
-                              ),
+                          builder: (context) => SeekerReviewsScreen(
+                            seekerId: SupabaseService.getCurrentUser()!.id,
+                            seekerName: profile['full_name'] ?? 'Me',
+                            canWriteReview: false,
+                          ),
                         ),
                       );
                     },
@@ -262,11 +262,10 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
                     },
                   ),
                   const SizedBox(height: 40),
-                ] else
-                  ...[
-                    // Admin View Extras?
-                    const SizedBox(height: 40),
-                  ],
+                ] else ...[
+                  // Admin View Extras?
+                  const SizedBox(height: 40),
+                ],
               ],
             ),
           ),
@@ -275,8 +274,10 @@ class _SeekerProfileViewState extends State<SeekerProfileView> {
     );
   }
 
-  Future<void> _navigateToEditProfile(BuildContext context,
-      Map<String, dynamic>? profile,) async {
+  Future<void> _navigateToEditProfile(
+    BuildContext context,
+    Map<String, dynamic>? profile,
+  ) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
